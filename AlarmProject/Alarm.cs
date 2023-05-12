@@ -2,34 +2,43 @@
 {
     public static class Alarm
     {
-        public static CancellationTokenSource SetOn(int milliseconds, Action action)
+        public static AlarmEvent SetOn(AlarmEvent alarmEvent)
         {
-            var tokenSource = new CancellationTokenSource();
-            CancellationToken cancellationToken = tokenSource.Token;
+            alarmEvent.CancellationTokenSource = new CancellationTokenSource();
+            CancellationToken cancellationToken = alarmEvent.CancellationTokenSource.Token;
 
-            Task.Delay(milliseconds, cancellationToken)
-                .ContinueWith(t => action(), cancellationToken);
+            int millisecondsToCall = Convert.ToInt32((alarmEvent.Time - DateTime.Now).TotalMilliseconds);
 
-            return tokenSource;
+            Task.Delay(millisecondsToCall, cancellationToken)
+                .ContinueWith(t => alarmEvent.Invoke(), cancellationToken);
+
+            return alarmEvent;
         }
 
-        public static CancellationTokenSource SetOn(DateTime time, Action action)
+        public static AlarmEvent SetOn(int milliseconds, Action action)
+        {
+            AlarmEvent alarmEvent = new(DateTime.Now + TimeSpan.FromMilliseconds(milliseconds), action);
+
+            return SetOn(alarmEvent);
+        }
+
+        public static AlarmEvent SetOn(DateTime time, Action action)
         {
             if (IsDateTimePassed(time))
                 throw new ArgumentOutOfRangeException();
 
-            int millisecondsToCall = Convert.ToInt32((time - DateTime.Now).TotalMilliseconds);
+            AlarmEvent alarmEvent = new(time, action);
 
-            return SetOn(millisecondsToCall, action);
-        }
-
-        public static CancellationTokenSource SetOn(TimeSpan timeSpan, Action action)
-        {
-            int millisecondsToCall = Convert.ToInt32(timeSpan.TotalMilliseconds);
-
-            return SetOn(millisecondsToCall, action);
+            return SetOn(alarmEvent);
         }
 
         private static bool IsDateTimePassed(DateTime dateTime) => DateTime.Now > dateTime;
+
+        public static AlarmEvent SetOn(TimeSpan timeSpan, Action action)
+        {
+            AlarmEvent alarmEvent = new(DateTime.Now + timeSpan, action);
+
+            return SetOn(alarmEvent);
+        }
     }
 }

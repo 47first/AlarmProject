@@ -1,13 +1,34 @@
 ﻿using AlarmProject;
 
+// Set On
 Alarm.SetOn(DateTime.Now + TimeSpan.FromSeconds(1), () => Console.WriteLine("Action after 1 second"));
 Alarm.SetOn(TimeSpan.FromSeconds(2), () => Console.WriteLine("Action after 2 seconds"));
 Alarm.SetOn(3000, () => Console.WriteLine("Action after 3 seconds"));
 
-var task = Alarm.SetOn(DateTime.Now + TimeSpan.FromSeconds(3), () => Console.WriteLine("Hello world not to show"));
+ClearOnEnter();
 
-task.Cancel();
+// Change time
+var alarmEvent = Alarm.SetOn(1000, () => Console.WriteLine("Action after 1 second"));
 
-Console.WriteLine(((DateTime.Now + TimeSpan.FromSeconds(6)) - DateTime.Now).TotalMilliseconds);
+alarmEvent.ChangeTime(DateTime.Now + TimeSpan.FromSeconds(2));
+alarmEvent.Action = () => Console.WriteLine("Action after 2 seconds");
 
-Thread.Sleep(7000);
+ClearOnEnter();
+
+// Disable
+alarmEvent = Alarm.SetOn(1000, () => Console.WriteLine("--- Line to not show ---"));
+alarmEvent.Disable();
+
+ClearOnEnter();
+
+// Change Action in time
+alarmEvent = Alarm.SetOn(1000, () => Console.WriteLine("Old action"));
+alarmEvent.Action = () => Console.WriteLine("New action");
+
+ClearOnEnter();
+
+static void ClearOnEnter()
+{
+    Console.ReadLine();
+    Console.Clear();
+}
