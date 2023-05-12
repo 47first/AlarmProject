@@ -2,16 +2,34 @@
 {
     public static class Alarm
     {
-        public static void AddEvent(DateTime time, Action action)
+        public static CancellationTokenSource SetOn(int milliseconds, Action action)
         {
-            if (IsDateTimePassed(time))
-                return;
+            var tokenSource = new CancellationTokenSource();
+            CancellationToken cancellationToken = tokenSource.Token;
 
-            int milisecondsToCall = (time - DateTime.Now).Milliseconds;
+            Task.Delay(milliseconds, cancellationToken)
+                .ContinueWith(t => action(), cancellationToken);
 
-            Task.Delay(milisecondsToCall).ContinueWith(t => action());
+            return tokenSource;
         }
 
-        private static bool IsDateTimePassed(DateTime dateTime) => DateTime.Now < dateTime;
+        public static CancellationTokenSource SetOn(DateTime time, Action action)
+        {
+            if (IsDateTimePassed(time))
+                throw new ArgumentOutOfRangeException();
+
+            int millisecondsToCall = Convert.ToInt32((time - DateTime.Now).TotalMilliseconds);
+
+            return SetOn(millisecondsToCall, action);
+        }
+
+        public static CancellationTokenSource SetOn(TimeSpan timeSpan, Action action)
+        {
+            int millisecondsToCall = Convert.ToInt32(timeSpan.TotalMilliseconds);
+
+            return SetOn(millisecondsToCall, action);
+        }
+
+        private static bool IsDateTimePassed(DateTime dateTime) => DateTime.Now > dateTime;
     }
 }
